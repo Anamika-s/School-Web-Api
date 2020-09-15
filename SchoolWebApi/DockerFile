@@ -1,0 +1,23 @@
+# For more info see: #http://aka.ms/VSContainerToolingDockerfiles
+
+
+FROM mcr.microsoft.com/dotnet/framework/aspnet AS base
+WORKDIR /app
+EXPOSE 54411
+
+FROM mcr.microsoft.com/dotnet/framework/aspnet AS builder
+WORKDIR /src
+COPY *.sln ./
+COPY SchoolWebApi/SchoolWebApi.csproj SchoolWebApi/
+RUN dotnet restore
+COPY . .
+WORKDIR /src/SchoolWebApi
+RUN dotnet build -c Release -o /app
+
+FROM builder AS publish
+RUN dotnet publish -c  Release -o /app
+
+FROM base AS production
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "SchooWebApi.dll"]
